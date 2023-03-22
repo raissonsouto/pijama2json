@@ -26,6 +26,7 @@ $ python3 app.py <input_file> <output_file>
 Where:
 
 ```<input_file>``` is the path to the PDF file containing the data.
+
 ```<output_file>``` is the path to the JSON file to be created.
 
 The script will extract the relevant data from the PDF file and store it in the specified JSON file.
