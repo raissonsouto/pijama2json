@@ -3,8 +3,8 @@ import json
 import re
 
 
-pattern = r'^(\d+) - (.+) - [A-Z] (\d+) \/ (\d+)(.*)$'
-pattern2 = r'^\d{2}\/\d{2}\/\d{4}\s\d{2}:\d{2}:\d{2}\s\d+\s\/\s\d+$'
+cadeiras_por_curso = r'^(\d+) - (.+) - [A-Z] (\d+) \/ (\d+)(.*)$'
+rodape = r'^\d{2}\/\d{2}\/\d{4}\s\d{2}:\d{2}:\d{2}\s\d+\s\/\s\d+$'
 
 EXCLUDE_PATTERNS = [
     "UNIVERSIDADE FEDERAL DE CAMPINA GRANDE",
@@ -51,14 +51,13 @@ def camel_case(text: str) -> str:
     words = text.split(" ")
     capitalized_words = [word.capitalize() for word in words]
 
-    return "".join(capitalized_words)
+    return " ".join(capitalized_words)
 
 
 def filter_data(page: list) -> None:
     for line in page:
         if line in EXCLUDE_PATTERNS or \
-           re.match(pattern, line) or \
-           re.match(pattern2, line) or\
+           re.match(rodape, line) or \
            line.startswith("TOTAL"):
             continue
         else:
@@ -89,37 +88,50 @@ def to_json(course_id: str, class_name: str, professors: list, schedule: list, v
         "vacancies": vacancies,
         "room": room
     }
-    print(my_dict)
+
     return json.dumps(my_dict)
 
 
 def scrape_data() -> None:
     i = 1
-    while i < len(data):
+    while i < len(data) - 1:
+
         id = data[i].split(" - ")[0]
-        turma = camel_case(" ".join(data[i].split(" - ")[1].split()[:-6]))
-        aulas = [
-            data[i].split(" ")[-3:-1]
-        ]
+        class_name = camel_case(" ".join(data[i].split(" - ")[1].split()[:-6]))
+        room = data[i].split(" ")[-1]
+
+        schedule = [data[i].split(" ")[-3:-1]]
+        schedule[0][0] = get_week_day(int(schedule[0][0]))
+
+        i += 1
+
         try:
-            aulas.append(data[i + 1].split(" ")[0:2])
-            aulas[1][0] = get_week_day(int(aulas[1][0]))
-        except Exception as e:
+            second_schedule = data[i].split(" ")[0:2]
+            second_class_day = get_week_day(int(second_schedule[0]))
+            schedule.append([second_class_day, second_schedule[1]])
+
+        except ValueError:
             pass
 
-        sala = data[i].split(" ")[-1]
+        i += 1
 
-        aulas[0][0] = get_week_day(int(aulas[0][0]))
+        while not data[i].startswith("14102100"):
+            i += 1
 
-        i += 2
+        vacancies = data[i].split(" ")[-1]
+
+        i += 1
+
+        while re.match(cadeiras_por_curso, data[i]):
+            i += 1
 
         professor = []
 
-        while data[i].startswith("- "):
+        while data[i].startswith("- ") and i < len(data) - 1:
             professor.append(camel_case(data[i].replace("- ", "")))
             i += 1
 
-        to_json(id, turma, professor, aulas, sala)
+        to_json(id, class_name, professor, schedule, vacancies, room)
 
 
 def read_pdf(pdf_path: str) -> None:
@@ -130,18 +142,13 @@ def read_pdf(pdf_path: str) -> None:
     :type pdf_path: str
     """
     with open(pdf_path, 'rb') as pdf_file:
-        pdf_reader = PyPDF2.PdfFileReader(pdf_file)
+        pdf_reader = PyPDF2.PdfReader(pdf_file)
 
-        for page_num in range(pdf_reader.getNumPages()):
-            pdf_page = pdf_reader.getPage(page_num)
-            page_text = pdf_page.extractText().split("/")
+        for page_num in range(len(pdf_reader.pages)):
+            pdf_page = pdf_reader.pages[page_num]
+            page_text = pdf_page.extract_text().split("\n")
 
             filter_data(page_text)
-
-
-with open('temp.txt', 'w') as temp:
-    for line in data:
-        temp.write(f'{line}\n')
 
 
 if __name__ == "__main__":
@@ -150,4 +157,4 @@ if __name__ == "__main__":
     scrape_data()
 
     with open("sample.json", "w") as outfile:
-        outfile.write(data)
+        outfile.write(str(data))
