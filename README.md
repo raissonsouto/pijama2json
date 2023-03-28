@@ -12,7 +12,7 @@ To run this script, you need to have Python 3 installed on your system along wit
 You can install the packages by running:
 
 ```
-$ pip install ...
+$ pip install -r requirements.txt
 ```
 
 ## Usage
