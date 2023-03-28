@@ -3,8 +3,8 @@ import json
 import re
 
 
-cadeiras_por_curso = r'^(\d+) - (.+) - [A-Z] (\d+) \/ (\d+)(.*)$'
-rodape = r'^\d{2}\/\d{2}\/\d{4}\s\d{2}:\d{2}:\d{2}\s\d+\s\/\s\d+$'
+cadeiras_por_curso = r"^(\d+) - (.+) - [A-Z] (\d+) \/ (\d+)(.*)$"
+rodape = r"^\d{2}\/\d{2}\/\d{4}\s\d{2}:\d{2}:\d{2}\s\d+\s\/\s\d+$"
 
 EXCLUDE_PATTERNS = [
     "UNIVERSIDADE FEDERAL DE CAMPINA GRANDE",
@@ -64,7 +64,7 @@ def filter_data(page: list) -> None:
             data.append(line)
 
 
-def to_json(course_id: str, class_name: str, professors: list, schedule: list, vacancies: int, room: str) -> str:
+def to_json(course_id: str, class_name: str, professors: list, schedule: list, vacancies: int, room: str) -> dict:
     """
     Given attributes of a course, returns a JSON string representing the course.
 
@@ -89,7 +89,7 @@ def to_json(course_id: str, class_name: str, professors: list, schedule: list, v
         "room": room
     }
 
-    return json.dumps(my_dict)
+    return my_dict
 
 
 def scrape_data() -> None:
@@ -131,7 +131,7 @@ def scrape_data() -> None:
             professor.append(camel_case(data[i].replace("- ", "")))
             i += 1
 
-        to_json(id, class_name, professor, schedule, vacancies, room)
+        scraped_data.append(to_json(id, class_name, professor, schedule, vacancies, room))
 
 
 def read_pdf(pdf_path: str) -> None:
@@ -141,7 +141,7 @@ def read_pdf(pdf_path: str) -> None:
     :param pdf_path: The path to the PDF file to read.
     :type pdf_path: str
     """
-    with open(pdf_path, 'rb') as pdf_file:
+    with open(pdf_path, "rb") as pdf_file:
         pdf_reader = PyPDF2.PdfReader(pdf_file)
 
         for page_num in range(len(pdf_reader.pages)):
@@ -157,4 +157,4 @@ if __name__ == "__main__":
     scrape_data()
 
     with open("sample.json", "w") as outfile:
-        outfile.write(str(data))
+        outfile.write(json.dumps(scraped_data, ensure_ascii=False))
