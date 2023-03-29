@@ -1,19 +1,17 @@
 import PyPDF2
 import json
 import re
+import os
 
 
-cadeiras_por_curso = r"^(\d+) - (.+) - [A-Z] (\d+) \/ (\d+)(.*)$"
-rodape = r"^\d{2}\/\d{2}\/\d{4}\s\d{2}:\d{2}:\d{2}\s\d+\s\/\s\d+$"
+VACANCIES_FOR_COURSE_IN_DISCIPLINE = r"^(\d+) - (.+) - [A-Z] (\d+) \/ (\d+)(.*)$"
+FOOTER = r"^\d{2}\/\d{2}\/\d{4}\s\d{2}:\d{2}:\d{2}\s\d+\s\/\s\d+$"
 
 EXCLUDE_PATTERNS = [
     "UNIVERSIDADE FEDERAL DE CAMPINA GRANDE",
     "PRÓ-REITORIA DE ENSINO",
     "Disciplina Turma CR CH Horários"
 ]
-
-data = []
-scraped_data = []
 
 
 def get_week_day(day: int) -> str:
@@ -54,10 +52,10 @@ def camel_case(text: str) -> str:
     return " ".join(capitalized_words)
 
 
-def filter_data(page: list) -> None:
+def filter_data(page: list, data: list) -> None:
     for line in page:
         if line in EXCLUDE_PATTERNS or \
-           re.match(rodape, line) or \
+           re.match(FOOTER, line) or \
            line.startswith("TOTAL"):
             continue
         else:
@@ -92,21 +90,23 @@ def to_json(course_id: str, class_name: str, professors: list, schedule: list, v
     return my_dict
 
 
-def scrape_data() -> None:
+def scrape_data(pdf_content_by_line: list) -> list:
+    result = []
     i = 1
-    while i < len(data) - 1:
 
-        id = data[i].split(" - ")[0]
-        class_name = camel_case(" ".join(data[i].split(" - ")[1].split()[:-6]))
-        room = data[i].split(" ")[-1]
+    while i < len(pdf_content_by_line) - 1:
 
-        schedule = [data[i].split(" ")[-3:-1]]
+        id = pdf_content_by_line[i].split(" - ")[0]
+        class_name = camel_case(" ".join(pdf_content_by_line[i].split(" - ")[1].split()[:-6]))
+        room = pdf_content_by_line[i].split(" ")[-1]
+
+        schedule = [pdf_content_by_line[i].split(" ")[-3:-1]]
         schedule[0][0] = get_week_day(int(schedule[0][0]))
 
         i += 1
 
         try:
-            second_schedule = data[i].split(" ")[0:2]
+            second_schedule = pdf_content_by_line[i].split(" ")[0:2]
             second_class_day = get_week_day(int(second_schedule[0]))
             schedule.append([second_class_day, second_schedule[1]])
 
@@ -115,31 +115,37 @@ def scrape_data() -> None:
 
         i += 1
 
-        while not data[i].startswith("14102100"):
+        while i < len(pdf_content_by_line) - 1 and not pdf_content_by_line[i].startswith("14102100"):
             i += 1
 
-        vacancies = data[i].split(" ")[-1]
+        vacancies = pdf_content_by_line[i].split(" ")[-1]
 
         i += 1
 
-        while re.match(cadeiras_por_curso, data[i]):
+        while i < len(pdf_content_by_line) - 1 and re.match(VACANCIES_FOR_COURSE_IN_DISCIPLINE, pdf_content_by_line[i]):
+            print(pdf_content_by_line[i])
             i += 1
 
         professor = []
 
-        while data[i].startswith("- ") and i < len(data) - 1:
-            professor.append(camel_case(data[i].replace("- ", "")))
+        while i < len(pdf_content_by_line) - 1 and pdf_content_by_line[i].startswith("- "):
+            professor.append(camel_case(pdf_content_by_line[i].replace("- ", "")))
             i += 1
 
-        scraped_data.append(to_json(id, class_name, professor, schedule, vacancies, room))
+        result.append(to_json(id, class_name, professor, schedule, vacancies, room))
+
+    return result
 
 
-def read_pdf(pdf_path: str) -> None:
+def read_pdf(pdf_path: str, pdf_content_by_line: list) -> None:
     """
     Read a PDF file and print its text.
 
     :param pdf_path: The path to the PDF file to read.
     :type pdf_path: str
+
+    :param pdf_content_by_line:
+    :type pdf_content_by_line: list
     """
     with open(pdf_path, "rb") as pdf_file:
         pdf_reader = PyPDF2.PdfReader(pdf_file)
@@ -148,13 +154,44 @@ def read_pdf(pdf_path: str) -> None:
             pdf_page = pdf_reader.pages[page_num]
             page_text = pdf_page.extract_text().split("\n")
 
-            filter_data(page_text)
+            filter_data(page_text, pdf_content_by_line)
+
+
+def write_in_json(path: str, scraped_data: list) -> None:
+    with open(path, "w", encoding='utf-8') as outfile:
+        outfile.write(json.dumps(scraped_data, ensure_ascii=False))
+
+
+def generate_json(pdf_path: str, json_path: str) -> None:
+    pdf_content_by_line = []
+    read_pdf(pdf_path, pdf_content_by_line)
+
+    scraped_data = scrape_data(pdf_content_by_line)
+    write_in_json(json_path, scraped_data)
+
+
+def scan(path='./pdfs', jsons_path='./jsons') -> None:
+    """
+    Recursively search for all PDF files in the given path, and for each course folder found,
+    check if there is a corresponding JSON file in the specified JSON path. If there isn't,
+    create a new JSON file using the given file name and path.
+
+    :param path: The path to search for PDF files in (default is '/pdfs')
+    :type path: str
+    :param jsons_path: The path to look for or create JSON files in (default is '/jsons')
+    :type jsons_path: str
+    """
+    for dirpath, dirnames, filenames in os.walk(path):
+        for filename in filenames:
+
+            if filename.endswith('.pdf'):
+                course_name = os.path.basename(dirpath)
+                json_path = os.path.join(jsons_path, course_name, filename[:-4] + '.json')
+
+                if not os.path.exists(json_path):
+                    pdf_path = os.path.join(path, course_name, filename)
+                    generate_json(pdf_path, json_path)
 
 
 if __name__ == "__main__":
-
-    read_pdf("pdfs/computer-science/2022.2.pdf")
-    scrape_data()
-
-    with open("sample.json", "w") as outfile:
-        outfile.write(json.dumps(scraped_data, ensure_ascii=False))
+    scan()
