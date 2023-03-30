@@ -94,6 +94,8 @@ def scrape_data(pdf_content_by_line: list) -> list:
     result = []
     i = 1
 
+    course_id = pdf_content_by_line[0].split(" ")[2]
+
     while i < len(pdf_content_by_line) - 1:
 
         id = pdf_content_by_line[i].split(" - ")[0]
@@ -115,7 +117,7 @@ def scrape_data(pdf_content_by_line: list) -> list:
 
         i += 1
 
-        while i < len(pdf_content_by_line) - 1 and not pdf_content_by_line[i].startswith("14102100"):
+        while i < len(pdf_content_by_line) - 1 and not pdf_content_by_line[i].startswith(course_id):
             i += 1
 
         vacancies = pdf_content_by_line[i].split(" ")[-1]
@@ -123,7 +125,6 @@ def scrape_data(pdf_content_by_line: list) -> list:
         i += 1
 
         while i < len(pdf_content_by_line) - 1 and re.match(VACANCIES_FOR_COURSE_IN_DISCIPLINE, pdf_content_by_line[i]):
-            print(pdf_content_by_line[i])
             i += 1
 
         professor = []
@@ -158,8 +159,15 @@ def read_pdf(pdf_path: str, pdf_content_by_line: list) -> None:
 
 
 def write_in_json(path: str, scraped_data: list) -> None:
-    with open(path, "w", encoding='utf-8') as outfile:
-        outfile.write(json.dumps(scraped_data, ensure_ascii=False))
+    try:
+        with open(path, "w", encoding='utf-8') as outfile:
+            outfile.write(json.dumps(scraped_data, ensure_ascii=False))
+
+    except FileNotFoundError:
+        os.mkdir(f"jsons/{path.split('/')[2]}")
+
+        with open(path, "w", encoding='utf-8') as outfile:
+            outfile.write(json.dumps(scraped_data, ensure_ascii=False))
 
 
 def generate_json(pdf_path: str, json_path: str) -> None:
