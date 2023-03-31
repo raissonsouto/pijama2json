@@ -53,6 +53,14 @@ def camel_case(text: str) -> str:
 
 
 def filter_data(page: list, data: list) -> None:
+    """
+    Filter unwanted lines from a page and append the remaining lines to a list of scraped data.
+
+    :param page: The list of lines from a page of the pdf.
+    :type page: list
+    :param data: The list of scraped data to which the remaining lines will be appended.
+    :type data: list
+    """
     for line in page:
         if line in EXCLUDE_PATTERNS or \
            re.match(FOOTER, line) or \
@@ -148,9 +156,11 @@ def read_pdf(pdf_path: str, pdf_content_by_line: list) -> None:
     :param pdf_content_by_line:
     :type pdf_content_by_line: list
     """
+    print(f"    [*] Reading PDF ...")
     with open(pdf_path, "rb") as pdf_file:
         pdf_reader = PyPDF2.PdfReader(pdf_file)
 
+        print(f"    [*] Filtering data")
         for page_num in range(len(pdf_reader.pages)):
             pdf_page = pdf_reader.pages[page_num]
             page_text = pdf_page.extract_text().split("\n")
@@ -159,6 +169,14 @@ def read_pdf(pdf_path: str, pdf_content_by_line: list) -> None:
 
 
 def write_in_json(path: str, scraped_data: list) -> None:
+    """
+       Write scraped data to a JSON file.
+
+       :param path: The file path of the JSON file to be written.
+       :type path: str
+       :param scraped_data: The list of scraped data to be written to the JSON file.
+       :type scraped_data: list
+       """
     try:
         with open(path, "w", encoding='utf-8') as outfile:
             outfile.write(json.dumps(scraped_data, ensure_ascii=False))
@@ -171,11 +189,21 @@ def write_in_json(path: str, scraped_data: list) -> None:
 
 
 def generate_json(pdf_path: str, json_path: str) -> None:
+    """
+    Get a PDF and generate a JSON from it
+
+    :param pdf_path: The file path of the PDF file to be scraped.
+    :type pdf_path: str
+    :param json_path: The file path of the JSON file to be generated.
+    :type json_path: str
+    """
     pdf_content_by_line = []
     read_pdf(pdf_path, pdf_content_by_line)
 
+    print("    [*] Generating JSON")
     scraped_data = scrape_data(pdf_content_by_line)
     write_in_json(json_path, scraped_data)
+    print("    [*] JSON done")
 
 
 def scan(path='./pdfs', jsons_path='./jsons') -> None:
@@ -189,17 +217,23 @@ def scan(path='./pdfs', jsons_path='./jsons') -> None:
     :param jsons_path: The path to look for or create JSON files in (default is '/jsons')
     :type jsons_path: str
     """
-    for dirpath, dirnames, filenames in os.walk(path):
+
+    print("[*] Scanning PDFs folder searching for unprocessed PDFs")
+
+    for directory_path, _, filenames in os.walk(path):  # _ == directories_name
         for filename in filenames:
 
             if filename.endswith('.pdf'):
-                course_name = os.path.basename(dirpath)
+                course_name = os.path.basename(directory_path)
                 json_path = os.path.join(jsons_path, course_name, filename[:-4] + '.json')
 
                 if not os.path.exists(json_path):
                     pdf_path = os.path.join(path, course_name, filename)
+                    print(f"[*] Unprocessed PDF found: {pdf_path}")
                     generate_json(pdf_path, json_path)
 
 
 if __name__ == "__main__":
+    print("\n-- PIJAMA2JSON --\n")
     scan()
+    print("[*] All done :)")
