@@ -1,3 +1,4 @@
+from util import get_week_day, is_romanian_numeral
 import PyPDF2
 import json
 import re
@@ -7,33 +8,15 @@ import os
 VACANCIES_FOR_COURSE_IN_DISCIPLINE = r"^(\d+) - (.+) - [A-Z] (\d+) \/ (\d+)(.*)$"
 FOOTER = r"^\d{2}\/\d{2}\/\d{4}\s\d{2}:\d{2}:\d{2}\s\d+\s\/\s\d+$"
 
+CONNECTIVES_ARTICLES_CONTRACTIONS = ["o", "a", "e", "p", "os", "as", "do", "da", "dos", "das", "em", "no", "na", "nos",
+                                     "nas", "de", "do", "da", "dos", "das", "por", "para", "com"]
+
+
 EXCLUDE_PATTERNS = [
     "UNIVERSIDADE FEDERAL DE CAMPINA GRANDE",
     "PRÓ-REITORIA DE ENSINO",
     "Disciplina Turma CR CH Horários"
 ]
-
-
-def get_week_day(day: int) -> str:
-    """
-    Given a day of the week represented as an integer (2-6 for Monday-Friday),
-    returns the corresponding day of the week in Portuguese.
-
-    :param day: The day of the week as an integer (2-6 for Monday-Friday).
-    :type day: int
-
-    :return:The corresponding day of the week in Portuguese, or an empty string
-    if the input is not a valid day of the week.
-    :rtype: str
-    """
-    days = {
-        2: "segunda",
-        3: "terça",
-        4: "quarta",
-        5: "quinta",
-        6: "sexta"
-    }
-    return days.get(day, "")
 
 
 def camel_case(text: str) -> str:
@@ -47,9 +30,22 @@ def camel_case(text: str) -> str:
     :rtype: str
     """
     words = text.split(" ")
-    capitalized_words = [word.capitalize() for word in words]
+    print(words)
+    capitalized_words = ""
 
-    return " ".join(capitalized_words)
+    for word in words:
+
+        l_word = word.lower()
+
+        if l_word in CONNECTIVES_ARTICLES_CONTRACTIONS:
+            capitalized_words += " " + l_word
+
+        elif is_romanian_numeral(l_word):
+            capitalized_words += " " + word.upper()
+        else:
+            capitalized_words += " " + word.capitalize()
+
+    return capitalized_words.strip()
 
 
 def filter_data(page: list, data: list) -> None:
