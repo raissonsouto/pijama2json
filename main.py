@@ -101,6 +101,7 @@ def scrape_data(pdf_content_by_line: list) -> list:
     course_id = pdf_content_by_line[0].split(" ")[2]
 
     while i < len(pdf_content_by_line) - 1:
+        print(pdf_content_by_line[len(pdf_content_by_line)-10:len(pdf_content_by_line)])
 
         id = pdf_content_by_line[i].split(" - ")[0]
         class_name = camel_case(" ".join(pdf_content_by_line[i].split(" - ")[1].split()[:-6]))
