@@ -1,25 +1,22 @@
 # Pijama2json
 
-Pijama2json is a Python script that reads data about disciplines offered in computer science course from UFCG (what we call as pijama, it´s a PDF) and turns it into a JSON format.
+Pijama2json is a Python data scraper that specializes in extracting information from PDFs known as "pijamas" within the community. These PDFs contain details about the disciplines offered in different courses at UFCG. The tool converts this extracted data into a convenient JSON format for streamlined accessibility and utilization.
 
 ## Requirements
 
-To run this script, you need to have Python3 installed on your system along with the following packages:
+To run this script, you need to have Python3 and Pip installed on your system.
 
-- PyPDF2
+## Help improving it
 
-You can install the packages by running:
+Contributions to this project are welcome. If you find a bug or have an idea for a new feature, please open an issue or submit a pull request.
 
-```
-$ pip install -r requirements.txt
-```
+To run this application on your local machine, you will need to have Python and Pip installed.
 
-## Usage
+After installing Python, you can follow these steps to install the application:
 
-To use pijama2json, you can run the following command:
-
-```
-$ python3 main.py
-```
-
-The script will extract the relevant data from the PDF file and store it in a JSON file.
+1. Clone this repository to your local machine
+2. Navigate to the project's root directory
+3. Create a virtual environment by running the command ```python -m venv venv```
+4. Activate the venv by running ```venv\Scripts\activate.ps1``` (Windows) or ```source venv/bin/activate``` (macOS or Linux)
+5. Install the required packages by running the command ```pip install -r requirements.txt```
+6. Run the command ```python app.py```.
