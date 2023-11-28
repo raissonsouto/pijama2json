@@ -17,6 +17,8 @@ After installing Python, you can follow these steps to install the application:
 1. Clone this repository to your local machine
 2. Navigate to the project's root directory
 3. Create a virtual environment by running the command ```python -m venv venv```
-4. Activate the venv by running ```venv\Scripts\activate.ps1``` (Windows) or ```source venv/bin/activate``` (macOS or Linux)
+4. Activate the venv by running:
+- Windows: ```venv\Scripts\activate.ps1```
+- Linux or Mac: ```source venv/bin/activate```
 5. Install the required packages by running the command ```pip install -r requirements.txt```
 6. Run the command ```python app.py```.
