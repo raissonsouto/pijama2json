@@ -1,17 +1,17 @@
 import os
 import json
-from util import remove_file_from_path
+from src.util import remove_file_from_path
 
 
-def write_json(path: str, scraped_data: list) -> None:
+def write_json(path: str, scraped_data) -> None:
     """
        Write scraped data to a JSON file.
 
        :param path: The file path of the JSON file to be written.
        :type path: str
-       :param scraped_data: The list of scraped data to be written to the JSON file.
-       :type scraped_data: list
+       :param scraped_data: The scraped data to be written to the JSON file.
        """
+
     try:
         with open(path, "w", encoding='utf-8') as outfile:
             outfile.write(json.dumps(scraped_data, ensure_ascii=False))

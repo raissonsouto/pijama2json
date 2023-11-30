@@ -26,7 +26,7 @@ def filter_data(page: list) -> list:
     filtered_page = []
 
     for line in page:
-        if line in unwanted_lines or match(footer, line) or line.startswith("TOTAL"):
+        if line not in unwanted_lines and not match(footer, line) and not line.startswith("TOTAL"):
             filtered_page.append(line)
 
     return filtered_page

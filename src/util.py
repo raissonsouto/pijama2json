@@ -40,12 +40,12 @@ def is_romanian_numeral(input_string: str) -> bool:
     return True
 
 
-def course_as_dict(course_id: str, class_name: str, professors: list, schedule: list, vacancies: int, room: str) -> dict:
+def class_as_dict(course_id: str, class_name: str, professors: list, schedule: list, vacancies: int, room: str) -> dict:
 
     """
-    Given attributes of a course, returns a dict representing the course.
+    Given attributes of a class, returns a dict representing the class.
 
-    :param course_id: The ID of the course.
+    :param course_id: The ID of the class.
     :param class_name: The name of the class.
     :param professors: A list of the name of the professor.
     :param schedule: A list of tuples representing the schedule of the class.
@@ -54,7 +54,7 @@ def course_as_dict(course_id: str, class_name: str, professors: list, schedule: 
     :param vacancies: The amount of seats available for the class.
     :param room: The room number and name where the class takes place.
 
-    :return: A JSON string representing the course.
+    :return: A JSON string representing the class.
     :rtype: dict
     """
     class_dict = {
@@ -74,10 +74,10 @@ def remove_file_from_path(path: str) -> str:
 
 
 def remove_file_extension(filename: str) -> str:
-    return ".".join(filename.split(".").pop())
+    return ".".join(filename.split(".")[0:2])
 
 
-def camel_case(text: str) -> str:
+def typographical_convention(text: str) -> str:
     """
     Convert a string of space-separated words into camel case.
 
@@ -92,7 +92,6 @@ def camel_case(text: str) -> str:
                                          "nos", "nas", "de", "do", "da", "dos", "das", "por", "para", "com"]
 
     words = text.split(" ")
-    print(words)
     capitalized_words = ""
 
     for word in words:
