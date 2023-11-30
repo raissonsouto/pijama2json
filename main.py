@@ -94,64 +94,9 @@ def to_json(course_id: str, class_name: str, professors: list, schedule: list, v
     return my_dict
 
 
-# def scrape_data(pdf_content_by_line: list) -> list:
-#     result = []
-#     i = 1
-
-#     course_id = pdf_content_by_line[0].split(" ")[2]
-
-#     while i < len(pdf_content_by_line) - 1:
-#         print(pdf_content_by_line[len(pdf_content_by_line)-10:len(pdf_content_by_line)])
-
-#         id = pdf_content_by_line[i].split(" - ")[0]
-#         class_name = camel_case(" ".join(pdf_content_by_line[i].split(" - ")[1].split()[:-6]))
-#         room = pdf_content_by_line[i].split(" ")[-1]
-
-#         schedule = [pdf_content_by_line[i].split(" ")[-3:-1]]
-#         schedule[0][0] = get_week_day(int(schedule[0][0]))
-
-#         i += 1
-
-#         try:
-#             second_schedule = pdf_content_by_line[i].split(" ")[0:2]
-#             second_class_day = get_week_day(int(second_schedule[0]))
-#             schedule.append([second_class_day, second_schedule[1]])
-
-#         except ValueError:
-#             pass
-
-#         i += 1
-
-#         while i < len(pdf_content_by_line) - 1 and not pdf_content_by_line[i].startswith(course_id):
-#             i += 1
-
-#         vacancies = pdf_content_by_line[i].split(" ")[-1]
-
-#         i += 1
-
-#         while i < len(pdf_content_by_line) - 1 and re.match(VACANCIES_FOR_COURSE_IN_DISCIPLINE, pdf_content_by_line[i]):
-#             i += 1
-
-#         professor = []
-
-#         while i < len(pdf_content_by_line) - 1 and pdf_content_by_line[i].startswith("- "):
-#             professor.append(camel_case(pdf_content_by_line[i].replace("- ", "")))
-#             i += 1
-
-#         result.append(to_json(id, class_name, professor, schedule, vacancies, room))
-
-#     return result
 
 def parse_schedule(schedule_info: list, pdf_content_by_line: list, current_index: int) -> tuple:
-    """
-    Parses the schedule information from the given line of the PDF content.
 
-    :param schedule_info: The initial schedule information extracted.
-    :param pdf_content_by_line: The entire PDF content split into lines.
-    :param current_index: The current index in the PDF content.
-
-    :return: A tuple containing the parsed schedule and the updated index.
-    """
     schedule = [schedule_info]
     schedule[0][0] = get_week_day(int(schedule[0][0]))
 
@@ -163,7 +108,6 @@ def parse_schedule(schedule_info: list, pdf_content_by_line: list, current_index
             second_class_day = get_week_day(int(second_schedule[0]))
             schedule.append([second_class_day, second_schedule[1]])
     except (ValueError, IndexError):
-        # Handling ValueError for int conversion and IndexError for list access
         pass
 
     current_index += 1
@@ -171,15 +115,7 @@ def parse_schedule(schedule_info: list, pdf_content_by_line: list, current_index
     return schedule, current_index
 
 def extract_course_details(line: str, pdf_content_by_line: list, current_index: int) -> tuple:
-    """
-    Extracts course details from a given line of the PDF content with enhanced schedule parsing.
 
-    :param line: The current line from the PDF content.
-    :param pdf_content_by_line: The entire PDF content split into lines.
-    :param current_index: The current index in the PDF content.
-
-    :return: A tuple containing extracted course details and the updated index.
-    """
     course_id = line.split(" - ")[0]
     class_name = camel_case(" ".join(line.split(" - ")[1].split()[:-6]))
     room = line.split(" ")[-1]
@@ -204,6 +140,32 @@ def extract_course_details(line: str, pdf_content_by_line: list, current_index: 
         current_index += 1
 
     return (course_id, class_name, room, schedule, vacancies, professor), current_index
+
+
+def extract_professors(pdf_content_by_line: list, current_index: int) -> tuple:
+
+    professors = []
+    while current_index < len(pdf_content_by_line) - 1 and pdf_content_by_line[current_index].startswith("- "):
+        professors.append(camel_case(pdf_content_by_line[current_index].replace("- ", "")))
+        current_index += 1
+
+    return professors, current_index
+
+def extract_class_name(line: str) -> str:
+
+    return camel_case(" ".join(line.split(" - ")[1].split()[:-6]))
+
+def extract_vacancies(pdf_content_by_line: list, current_index: int) -> tuple:
+
+    vacancies = pdf_content_by_line[current_index].split(" ")[-1]
+    current_index += 1
+    return vacancies, current_index
+
+
+def extract_class_id(line: str) -> str:
+
+    return line.split(" - ")[0]
+
 
 def scrape_data(pdf_content_by_line: list) -> list:
     result = []
