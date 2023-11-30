@@ -116,30 +116,25 @@ def parse_schedule(schedule_info: list, pdf_content_by_line: list, current_index
 
 def extract_course_details(line: str, pdf_content_by_line: list, current_index: int) -> tuple:
 
-    course_id = line.split(" - ")[0]
-    class_name = camel_case(" ".join(line.split(" - ")[1].split()[:-6]))
+    course_id = extract_class_id(line)
+    class_name = extract_class_name(line)
     room = line.split(" ")[-1]
 
     initial_schedule_info = line.split(" ")[-3:-1]
     schedule, current_index = parse_schedule(initial_schedule_info, pdf_content_by_line, current_index)
 
-    while current_index < len(pdf_content_by_line) - 1 and not pdf_content_by_line[current_index].startswith(course_id):
-        current_index += 1
+    vacancies, current_index = extract_vacancies(pdf_content_by_line, current_index)
+    
+    professors, current_index = extract_professors(pdf_content_by_line, current_index)
 
-    vacancies = pdf_content_by_line[current_index].split(" ")[-1]
-
-    current_index += 1
-
-    while current_index < len(pdf_content_by_line) - 1 and re.match(VACANCIES_FOR_COURSE_IN_DISCIPLINE, pdf_content_by_line[current_index]):
-        current_index += 1
-
-    professor = []
-
-    while current_index < len(pdf_content_by_line) - 1 and pdf_content_by_line[current_index].startswith("- "):
-        professor.append(camel_case(pdf_content_by_line[current_index].replace("- ", "")))
-        current_index += 1
-
-    return (course_id, class_name, room, schedule, vacancies, professor), current_index
+    return {
+        "course_id": course_id, 
+        "class_name": class_name, 
+        "room": room, 
+        "schedule": schedule, 
+        "vacancies": vacancies, 
+        "professors": professors
+    }, current_index
 
 
 def extract_professors(pdf_content_by_line: list, current_index: int) -> tuple:
@@ -173,7 +168,7 @@ def scrape_data(pdf_content_by_line: list) -> list:
 
     while i < len(pdf_content_by_line) - 1:
         course_details, i = extract_course_details(pdf_content_by_line[i], pdf_content_by_line, i)
-        result.append(to_json(*course_details))
+        result.append(to_json(**course_details))
 
     return result
 
