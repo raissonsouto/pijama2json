@@ -2,13 +2,11 @@
 
 Pijama2json is a Python data scraper that specializes in extracting information from PDFs known as "pijamas" within the community. These PDFs contain details about the disciplines offered in different courses at UFCG. The tool converts this extracted data into a convenient JSON format for streamlined accessibility and utilization.
 
-## Requirements
-
-To run this script, you need to have Python3 and Pip installed on your system.
-
 ## Help improving it
 
 Contributions to this project are welcome. If you find a bug or have an idea for a new feature, please open an issue or submit a pull request.
+
+## Run it on your own machine
 
 To run this application on your local machine, you will need to have Python and Pip installed.
 
