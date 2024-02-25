@@ -5,7 +5,7 @@ from src.util import remove_file_from_path
 
 def write_json(path: str, scraped_data) -> None:
     """
-       Write scraped data to a JSON file.
+       Write scraped data to a JSON file. With the given path does not exist, it will be created.
 
        :param path: The file path of the JSON file to be written.
        :type path: str

@@ -70,7 +70,7 @@ def class_as_dict(course_id: str, class_name: str, professors: list, schedule: l
 
 
 def remove_file_from_path(path: str) -> str:
-    return "/".join(path.split("/").pop())
+    return "/".join(path.split("/")[0:-1])
 
 
 def remove_file_extension(filename: str) -> str:

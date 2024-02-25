@@ -10,7 +10,7 @@ def self_scrap(path: str) -> None:
         if directory_path.endswith(path):
             continue
 
-        course = {"name": directory_path.split("/")[-1]}
+        course = {"name": directory_path.split("/")[-1], "title": ""}
 
         semesters = []
 
